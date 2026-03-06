@@ -40,8 +40,21 @@
     .hero-desc p { margin-bottom: 20px; }
     .hero-meta { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 
+
+    /* SEARCH BAR */
+    .search-bar { padding: 0 48px; border-bottom: 1px solid var(--border); background: var(--white); display: flex; align-items: center; }
+    .search-wrap { flex: 1; position: relative; display: flex; align-items: center; }
+    .search-icon { position: absolute; left: 16px; width: 14px; height: 14px; opacity: 0.35; pointer-events: none; }
+    .search-input { width: 100%; height: 52px; padding: 0 40px 0 42px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 300; color: var(--black); outline: none; letter-spacing: 0.02em; }
+    .search-input::placeholder { color: var(--mid); }
+    .search-clear { position: absolute; right: 16px; background: none; border: none; cursor: pointer; opacity: 0; pointer-events: none; font-size: 18px; color: var(--mid); line-height: 1; transition: opacity 0.15s; padding: 4px; }
+    .search-clear.visible { opacity: 1; pointer-events: auto; }
+    .search-clear:hover { color: var(--black); }
+    @media (max-width: 900px) { .search-bar { padding: 0 24px; } }
+    @media (max-width: 768px) { .search-bar { padding: 0 20px; position: sticky; top: 57px; z-index: 155; } }
+
     /* FILTER BAR */
-    .filters-bar { padding: 0 48px; border-bottom: 1px solid var(--border); display: flex; align-items: stretch; position: sticky; top: 65px; background: var(--white); z-index: 150; }
+    .filters-bar { padding: 0 48px; border-bottom: 1px solid var(--border); display: flex; align-items: stretch; position: sticky; top: 117px; background: var(--white); z-index: 150; }
     .dd-wrap { position: relative; border-right: 1px solid var(--border); flex: 1; }
     .dd-wrap:first-child { border-left: none; }
     .dd-trigger { width: 100%; height: 52px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: transparent; border: none; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.13em; text-transform: uppercase; color: var(--black); cursor: pointer; transition: background 0.15s; white-space: nowrap; }
@@ -158,7 +171,7 @@
     }
     @media (max-width: 768px) {
       .filters-bar { display: none; }
-      .mobile-filter-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); position: sticky; top: 57px; background: var(--white); z-index: 150; height: 44px; }
+      .mobile-filter-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); position: sticky; top: 109px; background: var(--white); z-index: 150; height: 44px; }
       .filters-meta { padding: 8px 20px; top: 101px; }
     }
     @media (max-width: 580px) {
@@ -259,6 +272,18 @@
     <span class="hero-meta" id="clubCount">Loading clubs...</span>
   </div>
 </section>
+
+<!-- SEARCH BAR -->
+<div class="search-bar">
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="6.5" cy="6.5" r="5.5" stroke="#0a0a0a" stroke-width="1.5"/>
+      <path d="M10.5 10.5L14 14" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search by name, neighborhood, vibe..." oninput="onSearchInput(this.value)" />
+    <button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear">&#215;</button>
+  </div>
+</div>
 
 <div class="filters-bar">
   <div class="dd-wrap" id="dd-day">
@@ -439,6 +464,23 @@ var LEGACY_PACE = {
 };
 
 var AF = { day:[], ampm:[], location:[], pace:[], tag:[] };
+var SEARCH_QUERY = '';
+
+function onSearchInput(val) {
+  SEARCH_QUERY = val.trim().toLowerCase();
+  var clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.classList.toggle('visible', SEARCH_QUERY.length > 0);
+  applyFilters();
+}
+
+function clearSearch() {
+  SEARCH_QUERY = '';
+  var input = document.getElementById('searchInput');
+  if (input) input.value = '';
+  var clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.classList.remove('visible');
+  applyFilters();
+}
 
 /* ── Dropdowns ── */
 function toggleDD(id) {
@@ -505,6 +547,18 @@ function applyFilters() {
     }
     if (show&&AF.pace.length)     show = AF.pace.some(function(p){ return (card.dataset.pace||'').toLowerCase().replace(/\s*[–-]\s*/g,'-')===p.toLowerCase().replace(/\s*[–-]\s*/g,'-'); });
     if (show&&AF.tag.length)      show = AF.tag.some(function(t){ return (card.dataset.tags||'').toLowerCase().indexOf(t.toLowerCase())!==-1; });
+    if (show && SEARCH_QUERY) {
+      var searchable = [
+        card.querySelector('.card-name') ? card.querySelector('.card-name').textContent : '',
+        card.dataset.location||'',
+        card.dataset.day||'',
+        card.dataset.pace||'',
+        card.dataset.tags||'',
+        card.querySelector('.card-desc') ? card.querySelector('.card-desc').textContent : '',
+        card.querySelector('.card-vibe') ? card.querySelector('.card-vibe').textContent : ''
+      ].join(' ').toLowerCase();
+      show = SEARCH_QUERY.split(/\s+/).every(function(term){ return searchable.indexOf(term) !== -1; });
+    }
     card.classList.toggle('hidden',!show);
     if(show) visible++;
   });
