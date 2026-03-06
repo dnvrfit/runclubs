@@ -566,12 +566,8 @@ function applyFilters() {
     if(show) visible++;
   });
   var hasAny = AF.day.length||AF.ampm.length||AF.location.length||AF.pace.length||AF.tag.length;
-  document.getElementById('filterSummary').innerHTML = hasAny
-    ? 'Showing <strong>'+visible+'</strong> of '+cards.length+' clubs'
-    : 'Showing all clubs';
-  var mob = document.getElementById('filterSummaryMobile');
-  if (mob) mob.textContent = hasAny ? visible+' of '+cards.length+' clubs' : cards.length+' clubs';
-  document.getElementById('btnClear').classList.toggle('visible',!!hasAny);
+  var btnClear = document.getElementById('btnClear');
+  if (btnClear) btnClear.classList.toggle('visible',!!hasAny);
 }
 
 function clearAll() {
